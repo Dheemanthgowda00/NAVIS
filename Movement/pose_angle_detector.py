@@ -8,11 +8,25 @@ User can select which movement to track via GUI buttons
 import cv2
 import mediapipe as mp
 import numpy as np
-import tkinter as tk
-from tkinter import ttk
-from PIL import Image, ImageTk
-import threading
+import sys
 from collections import deque
+
+try:
+    import tkinter as tk
+    from tkinter import ttk
+    from PIL import Image, ImageTk
+    import threading
+    TKINTER_AVAILABLE = True
+except ImportError:
+    print("❌ Error: tkinter not installed on this system")
+    print("   On Raspberry Pi/Linux, tkinter must be installed separately.")
+    print("\n   Solution 1: Use CLI version (no GUI)")
+    print("   $ python pose_angle_detector_cli.py")
+    print("\n   Solution 2: Install tkinter")
+    print("   $ sudo apt-get install python3-tk")
+    print("\n   Note: Custom Python 3.10 may need manual tkinter compilation.")
+    sys.exit(1)
+    TKINTER_AVAILABLE = False
 
 # MediaPipe setup
 mp_holistic = mp.solutions.holistic

@@ -4,9 +4,10 @@
 
 This module provides pose detection and movement control using MediaPipe pose landmarks. It detects bicep curls (both arms) and head movement, mapping them to 0-180 degree angles.
 
-**Two implementations available:**
-1. **`pose_angle_detector.py`** - MediaPipe pose detection with GUI (no Arduino)
-2. **`pose_angle_detector_arduino.py`** - Same as above + Arduino Mega PWM control
+**Three implementations available:**
+1. **`pose_angle_detector_cli.py`** - Command-line version (NO GUI, recommended for Raspberry Pi)
+2. **`pose_angle_detector.py`** - GUI version (requires tkinter)
+3. **`pose_angle_detector_arduino.py`** - GUI version with Arduino Mega integration
 
 ---
 
@@ -38,8 +39,6 @@ This module provides pose detection and movement control using MediaPipe pose la
 
 ### Prerequisites
 ```bash
-# Install Python 3.10 (or 3.8+)
-# Install pip packages
 pip install -r requirements.txt
 ```
 
@@ -47,43 +46,60 @@ pip install -r requirements.txt
 - **mediapipe**: Pose detection (33 landmarks)
 - **opencv-python**: Camera input and visualization
 - **numpy**: Angle calculations
-- **Pillow**: Image processing for GUI
-- **PyMata4**: Arduino communication (arduino version only)
-- **pyserial**: Serial communication (arduino version only)
+- **Pillow**: Image processing (optional)
+- **PyMata4**: Arduino communication (optional)
+- **pyserial**: Serial communication (optional)
 
 ---
 
-## Usage
+## Usage - Quick Start
 
-### 1. Pose Angle Detector (MediaPipe Only)
+### 🎯 RECOMMENDED: CLI Version (No GUI needed)
+
+```bash
+python pose_angle_detector_cli.py
+```
+
+**Keyboard Controls:**
+- **1** = Select LEFT BICEP
+- **2** = Select RIGHT BICEP  
+- **3** = Select HEAD MOVEMENT
+- **q** = Quit
+
+**Output:**
+```
+[Frame 30] LEFT BICEP: 45.3° | Left: 45.3° | Right: 78.2° | Head: 92.1°
+[Frame 60] LEFT BICEP: 52.1° | Left: 52.1° | Right: 81.5° | Head: 90.8°
+```
+
+✅ Works on all systems (including Raspberry Pi without display)
+✅ Real-time angle detection
+✅ No tkinter dependency
+
+---
+
+### GUI Version (requires tkinter)
 
 ```bash
 python pose_angle_detector.py
 ```
 
-**GUI Layout:**
-- **Left side**: Live camera feed with pose landmarks
-- **Right side**: Control panel with:
-  - Movement selection buttons (Left Bicep, Right Bicep, Head)
-  - Current angle display (0-180°)
-  - Angle progress bar
-  - Real-time status for all three joints
-  - Person detection indicator
+**GUI Features:**
+- Movement selection buttons (Left Bicep, Right Bicep, Head)
+- Real-time angle display (0-180°)
+- Angle progress bar
+- Status display for all three joints
+- Person detection indicator
+- Live camera feed with pose overlay
 
-**Controls:**
-1. Position yourself in front of camera
-2. Click desired movement button (Left Bicep, Right Bicep, or Head)
-3. Perform the movement
-4. Angle updates in real-time (0-180°)
-
-**Output:**
-- Real-time angle display in GUI
-- Pose landmarks visualization on camera feed
-- Angle annotations above detected joints
+**Installation (if needed):**
+```bash
+sudo apt-get install python3-tk
+```
 
 ---
 
-### 2. Pose Angle Detector with Arduino
+### Arduino Integration (requires tkinter + Arduino)
 
 ```bash
 python pose_angle_detector_arduino.py
@@ -91,16 +107,15 @@ python pose_angle_detector_arduino.py
 
 **Additional Requirements:**
 - Arduino Mega board connected via USB
-- PyMata4/StandardFirmata loaded on Arduino
-- Servo motors or PWM-controlled actuators wired to pins 3, 5, 6
+- StandardFirmata loaded on Arduino
+- Servo motors or PWM actuators wired to pins 3, 5, 6
 
 **Connection Steps:**
 1. Connect Arduino Mega via USB
-2. Run the script: `python pose_angle_detector_arduino.py`
+2. Run: `python pose_angle_detector_arduino.py`
 3. Click **"Connect to Arduino Mega"** button
-4. Script auto-detects Arduino on COM3-COM10
-5. Select movement (Left/Right Bicep or Head)
-6. Perform movement → Servo/actuator moves in real-time
+4. Select movement (Left/Right Bicep or Head)
+5. Perform movement → Servo moves in real-time
 
 **Arduino Wiring:**
 ```
@@ -108,15 +123,7 @@ Arduino Mega Pin 3  → Left Bicep Servo PWM
 Arduino Mega Pin 5  → Right Bicep Servo PWM
 Arduino Mega Pin 6  → Head Movement Servo PWM
 Arduino GND        → Servo GND
-Arduino 5V         → Servo VCC (through voltage regulator)
-```
-
-**Angle to PWM Conversion:**
-```
-Angle (°)  → PWM (0-255)
-0°         → 0
-90°        → 127
-180°       → 255
+Arduino 5V         → Servo VCC
 ```
 
 ---
@@ -139,8 +146,6 @@ Angle (°)  → PWM (0-255)
 **Head Movement Calculation:**
 - Uses eye landmarks (33, 263) for tilt detection
 - Vertical distance between eyes mapped to 0-180°
-- Small distance = Upright (90°)
-- Large distance = Tilted (0° or 180°)
 
 ### Smoothing Algorithm
 
@@ -158,46 +163,56 @@ min_detection_confidence = 0.7
 min_tracking_confidence = 0.7
 ```
 
+### Angle to PWM Conversion (Arduino)
+
+```
+Angle (°)  → PWM (0-255)
+0°         → 0
+90°        → 127
+180°       → 255
+```
+
 ---
 
 ## Troubleshooting
 
+### "No module named '_tkinter'" Error
+**Problem**: tkinter not installed for your Python version
+
+**Solution**: Use the CLI version (recommended)
+```bash
+python pose_angle_detector_cli.py
+```
+
 ### Person Not Detected
 - Ensure good lighting
 - Position entire body in frame
-- Keep at arm's length distance from camera
-- Check MediaPipe is installed: `pip install mediapipe`
+- Keep camera at arm's length distance
+- Check MediaPipe: `pip install mediapipe`
 
 ### Arduino Not Connecting
 - Check USB cable connection
-- Verify Arduino appears in Device Manager (Windows) or `/dev/ttyUSB*` (Linux)
-- Ensure StandardFirmata is uploaded to Arduino
-- Try clicking "Connect to Arduino Mega" multiple times
-- Check port manually: `python -m serial.tools.list_ports`
+- Verify Arduino in Device Manager or `/dev/ttyUSB*`
+- Upload StandardFirmata to Arduino
+- Try "Connect to Arduino Mega" button again
 
 ### Inaccurate Angles
 - Improve lighting conditions
-- Ensure clear visibility of arms
 - Reduce background clutter
-- Increase detection confidence in code if needed
-
-### PyMata4 Import Error
-```bash
-pip install PyMata4 --no-cache-dir
-```
+- Move closer to camera
 
 ---
 
 ## Performance
 
 ### Hardware Requirements
-- **Processor**: Raspberry Pi 4B or faster
+- **Processor**: Raspberry Pi 4B+ recommended
 - **RAM**: 2GB minimum
 - **Camera**: USB webcam (640×480 @ 30fps)
 
 ### Expected Performance
 - **FPS**: 25-30 FPS
-- **Latency**: 100-150ms (angle detection to PWM output)
+- **Latency**: 100-150ms with Arduino
 - **CPU Usage**: 40-50%
 
 ---
@@ -206,11 +221,11 @@ pip install PyMata4 --no-cache-dir
 
 ```
 Movement/
-├── pose_angle_detector.py              # MediaPipe-only version
-├── pose_angle_detector_arduino.py      # Arduino integration version
+├── pose_angle_detector_cli.py          # CLI version (RECOMMENDED)
+├── pose_angle_detector.py              # GUI version
+├── pose_angle_detector_arduino.py      # GUI + Arduino
 ├── requirements.txt                     # Dependencies
-├── README.md                            # This file
-└── SETUP.md                             # Detailed setup guide
+└── README.md                            # This file
 ```
 
 ---

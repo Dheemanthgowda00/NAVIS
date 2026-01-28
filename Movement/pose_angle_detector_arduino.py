@@ -8,13 +8,26 @@ User can select which movement to track via GUI buttons
 import cv2
 import mediapipe as mp
 import numpy as np
-import tkinter as tk
-from tkinter import ttk, messagebox
-from PIL import Image, ImageTk
-import threading
+import sys
 from collections import deque
 import serial
 import time
+
+try:
+    import tkinter as tk
+    from tkinter import ttk, messagebox
+    from PIL import Image, ImageTk
+    import threading
+    TKINTER_AVAILABLE = True
+except ImportError:
+    print("❌ Error: tkinter not installed on this system")
+    print("   On Raspberry Pi/Linux, tkinter must be installed separately.")
+    print("\n   Solution 1: Use CLI version without Arduino")
+    print("   $ python pose_angle_detector_cli.py")
+    print("\n   Solution 2: Install tkinter")
+    print("   $ sudo apt-get install python3-tk")
+    sys.exit(1)
+    TKINTER_AVAILABLE = False
 
 try:
     from PyMata4.pymata4 import PyMata4
