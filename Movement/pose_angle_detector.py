@@ -233,21 +233,33 @@ of the camera for accurate detection.
         
         return angle_deg
     
-    def calculate_head_angle(self, landmarks):
+    def calculate_head_angle(self, landmarks, face_landmarks=None):
         """
-        Calculate head movement angle (vertical rotation)
-        Uses nose, left eye, right eye to determine head tilt
+        Calculate head movement angle
+        Uses eye landmarks if available, otherwise uses pose landmarks
         """
-        nose = landmarks[0]
-        left_eye = landmarks[33]
-        right_eye = landmarks[263]
+        # If face landmarks available, use eye landmarks for better accuracy
+        if face_landmarks is not None and len(face_landmarks.landmark) > 263:
+            left_eye = face_landmarks.landmark[33]
+            right_eye = face_landmarks.landmark[263]
+            eye_distance = abs(left_eye.y - right_eye.y)
+            head_angle = np.clip(eye_distance * 180, 0, 180)
+        else:
+            # Fallback: Use shoulder landmarks from pose for head estimation
+            nose = landmarks[0]
+            left_shoulder = landmarks[11]
+            right_shoulder = landmarks[12]
+            
+            shoulder_center_x = (left_shoulder.x + right_shoulder.x) / 2
+            shoulder_center_y = (left_shoulder.y + right_shoulder.y) / 2
+            
+            dx = nose.x - shoulder_center_x
+            dy = nose.y - shoulder_center_y
+            
+            head_angle = np.degrees(np.arctan2(dy, dx))
+            head_angle = np.clip(abs(head_angle) * 1.0, 0, 180)
         
-        # Calculate head tilt angle
-        eye_distance = abs(left_eye.y - right_eye.y)
-        
-        # Normalize to 0-180 range
-        # Small difference = upright (90°), large difference = tilted
-        head_angle = np.clip(eye_distance * 180, 0, 180)
+        return head_angle
         
         return head_angle
     
@@ -293,7 +305,7 @@ of the camera for accurate detection.
                 
                 # Head movement
                 if landmarks[0].visibility > 0.7:
-                    head_angle = self.calculate_head_angle(landmarks)
+                    head_angle = self.calculate_head_angle(landmarks, results.face_landmarks)
                     head_angle = self.smooth_angle(head_angle, self.angle_history_head)
                 
                 # Draw pose landmarks
