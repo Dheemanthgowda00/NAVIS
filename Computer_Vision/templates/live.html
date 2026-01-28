@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Face Recognition</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Live Recognition Stream</h1>
+        <div class="video-container">
+            <img src="{{ url_for('video_feed') }}" alt="Live Feed">
+        </div>
+        <a href="{{ url_for('stop') }}"><button class="stop-button">⛔ Stop</button></a>
+    </div>
+</body>
+</html>
