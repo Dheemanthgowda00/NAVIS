@@ -33,12 +33,14 @@ DEPTH_THRESHOLD_FAR = 0.7     # Person farther than 70% frame height
 
 # --- State Management ---
 state_lock = Lock()
+CURRENT_SPEED = 200  # Default speed (0-255)
 current_state = {
     'person_detected': False,
     'position': 'center',  # left, center, right
     'depth': 'medium',     # near, medium, far
     'distance_percent': 0,
     'command': 'S',        # Current MQTT command
+    'speed': CURRENT_SPEED,
     'fps': 0,
     'frame_count': 0,
     'person_x': 0,
@@ -56,13 +58,17 @@ holistic = mp_holistic.Holistic(
     min_tracking_confidence=0.4
 )
 
-def send_mqtt_command(cmd, speed=200):
+def send_mqtt_command(cmd, speed=None):
     """Send command to MQTT broker"""
+    global CURRENT_SPEED
     try:
+        if speed is None:
+            speed = CURRENT_SPEED
         payload = json.dumps({"cmd": cmd, "speed": int(speed)})
         client.publish(MQTT_TOPIC, payload)
         with state_lock:
             current_state['command'] = cmd
+            current_state['speed'] = int(speed)
         return True
     except Exception as e:
         print(f"MQTT Error: {e}")
@@ -210,7 +216,7 @@ def generate_frames():
             
             # Send command if it changed
             if command != last_command:
-                send_mqtt_command(command, speed=200)
+                send_mqtt_command(command)
                 last_command = command
         else:
             # No person detected
@@ -218,7 +224,7 @@ def generate_frames():
                 current_state['person_detected'] = False
             
             if last_command != 'S':
-                send_mqtt_command('S', speed=0)
+                send_mqtt_command('S')
                 last_command = 'S'
         
         # --- Draw Visualization (only for display) ---
@@ -306,6 +312,23 @@ def set_threshold():
             'status': 'updated',
             'near': DEPTH_THRESHOLD_NEAR,
             'far': DEPTH_THRESHOLD_FAR
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/set_speed', methods=['POST'])
+def set_speed():
+    """Update motor speed"""
+    global CURRENT_SPEED
+    try:
+        data = request.json
+        speed = data.get('speed', CURRENT_SPEED)
+        CURRENT_SPEED = max(0, min(255, int(speed)))  # Clamp to 0-255
+        with state_lock:
+            current_state['speed'] = CURRENT_SPEED
+        return jsonify({
+            'status': 'updated',
+            'speed': CURRENT_SPEED
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 400
