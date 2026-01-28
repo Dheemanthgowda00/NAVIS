@@ -51,48 +51,50 @@ def generate_frames():
             # Slight brightness adjustment
             display_frame = cv2.convertScaleAbs(frame, alpha=1.1, beta=10)
 
-            # Known faces from images/ folder
-            face_locations, face_names = sfr.detect_known_faces(frame)
+            # Single detection pass - avoid duplicate detections
+            small_frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
+            rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+            
+            # Detect all faces
+            face_locations = face_recognition.face_locations(rgb_small_frame, model="hog")
+            face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-            # Dynamic face match
-            for i, (top, right, bottom, left) in enumerate(face_locations):
-                name = face_names[i] if i < len(face_names) else "Unknown"
-                color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
+            # Match each face
+            for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+                name = "Unknown"
+                color = (0, 0, 255)  # Red for unknown
                 
-                cv2.rectangle(display_frame, (left, top), (right, bottom), color, 2)
-                cv2.putText(display_frame, name, (left, top - 10), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-
-            # Dynamic face matching
-            if dynamic_encodings:
-                # Use smaller frame for faster processing
-                small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-                rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
-                locations = face_recognition.face_locations(rgb_small_frame, model="hog")  # Faster model
-                encodings = face_recognition.face_encodings(rgb_small_frame, locations)
-
-                for (top, right, bottom, left), face_encoding in zip(locations, encodings):
+                # First try to match against dynamic encodings (uploaded faces)
+                if dynamic_encodings:
                     matches = face_recognition.compare_faces(dynamic_encodings, face_encoding, tolerance=0.6)
                     face_distances = face_recognition.face_distance(dynamic_encodings, face_encoding)
-                    
-                    name = "Unknown"
-                    color = (0, 0, 255)
                     
                     if len(face_distances) > 0:
                         best_match_index = face_distances.argmin()
                         if matches[best_match_index]:
                             name = dynamic_names[best_match_index]
-                            color = (0, 255, 0)
+                            color = (0, 255, 0)  # Green for recognized
+                
+                # If not matched in dynamic, try known faces from images folder
+                if name == "Unknown" and sfr.known_face_encodings:
+                    matches = face_recognition.compare_faces(sfr.known_face_encodings, face_encoding, tolerance=0.6)
+                    face_distances = face_recognition.face_distance(sfr.known_face_encodings, face_encoding)
+                    
+                    if len(face_distances) > 0:
+                        best_match_index = face_distances.argmin()
+                        if matches[best_match_index]:
+                            name = sfr.known_face_names[best_match_index]
+                            color = (0, 255, 0)  # Green for recognized
 
-                    # Scale back up
-                    top *= 4
-                    right *= 4
-                    bottom *= 4
-                    left *= 4
+                # Scale back up to original frame size
+                top *= 2
+                right *= 2
+                bottom *= 2
+                left *= 2
 
-                    cv2.rectangle(display_frame, (left, top), (right, bottom), color, 2)
-                    cv2.putText(display_frame, name, (left, top - 10), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+                cv2.rectangle(display_frame, (left, top), (right, bottom), color, 2)
+                cv2.putText(display_frame, name, (left, top - 10), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
         # Encode frame with optimized quality
         ret, buffer = cv2.imencode('.jpg', display_frame, 
