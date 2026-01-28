@@ -1,0 +1,24 @@
+# Human_Detection_Following - Dependencies
+
+# Flask - Web framework
+Flask==3.1.2
+
+# OpenCV - Computer vision library
+opencv-python==4.8.1.78
+
+# MediaPipe - Pose and hand detection
+mediapipe==0.10.8
+
+# MQTT - Message broker client
+paho-mqtt==2.1.0
+
+# NumPy - Numerical computing
+numpy==1.24.3
+
+# Note: Additional Flask dependencies (auto-installed):
+# - Werkzeug - WSGI utilities
+# - Jinja2 - Template engine
+# - Click - CLI utilities
+# - ItsDangerous - Data signing
+# - Blinker - Signal support
+# - MarkupSafe - Safe string operations

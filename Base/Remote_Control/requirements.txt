@@ -1,0 +1,14 @@
+# Remote Control Application Requirements
+# Flask - Web framework for the remote control web interface
+Flask==3.1.2
+
+# paho-mqtt - MQTT client library for robot communication
+paho-mqtt==2.1.0
+
+# Dependencies (automatically installed with above packages)
+# blinker==1.9.0
+# click==8.3.1
+# itsdangerous==2.2.0
+# Jinja2==3.1.6
+# MarkupSafe==3.0.3
+# Werkzeug==3.1.5

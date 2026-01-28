@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Robomanthan Remote</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        .control-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 20px auto; }
+        button { 
+            background: #444; color: white; border: none; padding: 25px; 
+            font-size: 24px; border-radius: 10px; touch-action: manipulation;
+        }
+        button:active { background: #00ff00; color: black; }
+        .stop-btn { background: #ff0000; grid-column: span 3; }
+        .slider-container { margin: 40px auto; max-width: 300px; }
+        input[type=range] { width: 100%; height: 20px; }
+        .status { color: #00ff00; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>ROBOMANTHAN</h1>
+    
+    <div class="slider-container">
+        <label>Speed: <span id="speedVal">200</span></label><br>
+        <input type="range" id="speed" min="0" max="255" value="200" oninput="updateSpeed(this.value)">
+    </div>
+
+    <div class="control-panel">
+        <div></div>
+        <button onmousedown="send('F')" onmouseup="send('S')" ontouchstart="send('F')" ontouchend="send('S')">▲</button>
+        <div></div>
+        
+        <button onmousedown="send('L')" onmouseup="send('S')" ontouchstart="send('L')" ontouchend="send('S')">◀</button>
+        <button onclick="send('S')" style="background:#666">●</button>
+        <button onmousedown="send('R')" onmouseup="send('S')" ontouchstart="send('R')" ontouchend="send('S')">▶</button>
+        
+        <div></div>
+        <button onmousedown="send('B')" onmouseup="send('S')" ontouchstart="send('B')" ontouchend="send('S')">▼</button>
+        <div></div>
+
+        <button class="stop-btn" onclick="send('S')">EMERGENCY STOP</button>
+    </div>
+
+    <div class="status" id="status">Ready</div>
+
+    <script>
+        let currentSpeed = 200;
+
+        function updateSpeed(val) {
+            currentSpeed = val;
+            document.getElementById('speedVal').innerText = val;
+        }
+
+        function send(command) {
+            const statusEl = document.getElementById('status');
+            const commands = {
+                'F': 'FORWARD',
+                'B': 'BACKWARD',
+                'L': 'LEFT',
+                'R': 'RIGHT',
+                'S': 'STOP'
+            };
+            
+            statusEl.innerText = "Command: " + commands[command] + " | Speed: " + currentSpeed;
+            
+            fetch('/send_command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cmd: command, speed: currentSpeed })
+            }).catch(err => statusEl.innerText = "Error: " + err);
+        }
+    </script>
+</body>
+</html>
