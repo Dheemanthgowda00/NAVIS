@@ -18,8 +18,8 @@ holistic = mp_holistic.Holistic(
     static_image_mode=False,
     model_complexity=1,
     smooth_landmarks=True,
-    min_detection_confidence=0.7,
-    min_tracking_confidence=0.7
+    min_detection_confidence=0.4,
+    min_tracking_confidence=0.4
 )
 
 class PoseAngleDetectorCLI:
@@ -152,17 +152,17 @@ class PoseAngleDetectorCLI:
                 landmarks = results.pose_landmarks.landmark
                 
                 # Left Bicep: shoulder (11) -> elbow (13) -> wrist (15)
-                if landmarks[11].visibility > 0.7 and landmarks[13].visibility > 0.7 and landmarks[15].visibility > 0.7:
+                if landmarks[11].visibility > 0.3 and landmarks[13].visibility > 0.3 and landmarks[15].visibility > 0.3:
                     left_bicep_angle = self.calculate_angle(landmarks[11], landmarks[13], landmarks[15])
                     left_bicep_angle = self.smooth_angle(left_bicep_angle, self.angle_history_left)
                 
                 # Right Bicep: shoulder (12) -> elbow (14) -> wrist (16)
-                if landmarks[12].visibility > 0.7 and landmarks[14].visibility > 0.7 and landmarks[16].visibility > 0.7:
+                if landmarks[12].visibility > 0.3 and landmarks[14].visibility > 0.3 and landmarks[16].visibility > 0.3:
                     right_bicep_angle = self.calculate_angle(landmarks[12], landmarks[14], landmarks[16])
                     right_bicep_angle = self.smooth_angle(right_bicep_angle, self.angle_history_right)
                 
                 # Head movement
-                if landmarks[0].visibility > 0.7:
+                if landmarks[0].visibility > 0.3:
                     head_angle = self.calculate_head_angle(landmarks, results.face_landmarks)
                     head_angle = self.smooth_angle(head_angle, self.angle_history_head)
                 
