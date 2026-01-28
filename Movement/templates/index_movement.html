@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movement Angle Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #00ff88;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .video-container {
+            background: #0f0f0f;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .video-stream {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 5px;
+            background: #000;
+        }
+
+        .control-panel {
+            background: #1a1a1a;
+            border: 2px solid #00ccff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 204, 255, 0.3);
+        }
+
+        .status-section {
+            margin-bottom: 25px;
+        }
+
+        .status-title {
+            font-size: 1.1em;
+            color: #00ccff;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #00ccff;
+        }
+
+        .angle-display {
+            background: #0f0f0f;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #00ff88;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .angle-value {
+            font-size: 3em;
+            color: #00ff88;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .angle-label {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button.active {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+
+        .btn-left {
+            background: #FF6B6B;
+            color: white;
+        }
+
+        .btn-left.active {
+            background: #ff4444;
+        }
+
+        .btn-right {
+            background: #4ECDC4;
+            color: white;
+        }
+
+        .btn-right.active {
+            background: #3db5b0;
+        }
+
+        .btn-head {
+            background: #FFD93D;
+            color: black;
+        }
+
+        .btn-head.active {
+            background: #ffc800;
+        }
+
+        .status-box {
+            background: #0f0f0f;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #00ff88;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .status-label {
+            color: #888;
+            font-size: 0.85em;
+            margin-bottom: 3px;
+        }
+
+        .status-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .detection-status {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .detection-status.detected {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .detection-status.not-detected {
+            background: rgba(255, 100, 100, 0.1);
+            border: 2px solid #ff6464;
+            color: #ff6464;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00ccff);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎥 Movement Angle Detector</h1>
+            <p class="subtitle">Real-time Pose Angle Detection via Web</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Video Stream -->
+            <div class="video-container">
+                <h2 style="color: #00ff88; margin-bottom: 15px;">📹 Live Camera Feed</h2>
+                <img id="videoStream" class="video-stream" src="/video_feed" alt="Video Stream">
+            </div>
+
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <!-- Detection Status -->
+                <div id="detectionStatus" class="detection-status not-detected">
+                    ⚪ NO PERSON
+                </div>
+
+                <!-- Angle Display -->
+                <div class="angle-display">
+                    <div class="angle-value" id="angleValue">0°</div>
+                    <div class="angle-label">Current Angle</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <!-- Movement Selection -->
+                <div class="status-section">
+                    <div class="status-title">🎮 Select Movement</div>
+                    <div class="button-group">
+                        <button class="btn-left active" onclick="selectJoint('left_bicep')">LEFT BICEP</button>
+                        <button class="btn-right" onclick="selectJoint('right_bicep')">RIGHT BICEP</button>
+                        <button class="btn-head" onclick="selectJoint('head')">HEAD</button>
+                    </div>
+                </div>
+
+                <!-- Status Information -->
+                <div class="status-section">
+                    <div class="status-title">📊 Angles</div>
+                    
+                    <div class="status-box">
+                        <div class="status-label">Left Bicep</div>
+                        <div class="status-value" id="leftAngle">—</div>
+                    </div>
+                    
+                    <div class="status-box">
+                        <div class="status-label">Right Bicep</div>
+                        <div class="status-value" id="rightAngle">—</div>
+                    </div>
+                    
+                    <div class="status-box">
+                        <div class="status-label">Head Movement</div>
+                        <div class="status-value" id="headAngle">—</div>
+                    </div>
+
+                    <div class="status-box">
+                        <div class="status-label">FPS</div>
+                        <div class="status-value" id="fps">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>NAVIS Robot - Movement Angle Detector</p>
+            <p style="color: #666; margin-top: 10px;">Powered by MediaPipe | OpenCV | Flask</p>
+        </div>
+    </div>
+
+    <script>
+        let currentJoint = 'left_bicep';
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+
+                // Update detection status
+                const statusDiv = document.getElementById('detectionStatus');
+                if (data.person_detected) {
+                    statusDiv.className = 'detection-status detected';
+                    statusDiv.innerHTML = '🟢 PERSON DETECTED';
+                } else {
+                    statusDiv.className = 'detection-status not-detected';
+                    statusDiv.innerHTML = '⚪ NO PERSON';
+                }
+
+                // Update angle display
+                document.getElementById('angleValue').textContent = data.current_angle.toFixed(1) + '°';
+                document.getElementById('progressFill').style.width = (data.current_angle / 180 * 100) + '%';
+
+                // Update all angles
+                document.getElementById('leftAngle').textContent = data.left_bicep_angle.toFixed(1) + '°';
+                document.getElementById('rightAngle').textContent = data.right_bicep_angle.toFixed(1) + '°';
+                document.getElementById('headAngle').textContent = data.head_angle.toFixed(1) + '°';
+                document.getElementById('fps').textContent = data.fps.toFixed(1);
+
+            } catch (error) {
+                console.error('Status update error:', error);
+            }
+        }
+
+        function selectJoint(joint) {
+            currentJoint = joint;
+            
+            // Update button states
+            document.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Send selection to server
+            fetch(`/select_joint/${joint}`)
+                .then(response => response.json())
+                .then(data => console.log('Selected:', joint));
+        }
+
+        // Update status every 1000ms
+        setInterval(updateStatus, 1000);
+        updateStatus();
+    </script>
+</body>
+</html>

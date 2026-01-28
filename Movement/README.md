@@ -4,10 +4,11 @@
 
 This module provides pose detection and movement control using MediaPipe pose landmarks. It detects bicep curls (both arms) and head movement, mapping them to 0-180 degree angles.
 
-**Three implementations available:**
-1. **`pose_angle_detector_cli.py`** - Command-line version (NO GUI, recommended for Raspberry Pi)
-2. **`pose_angle_detector.py`** - GUI version (requires tkinter)
-3. **`pose_angle_detector_arduino.py`** - GUI version with Arduino Mega integration
+**Available implementations:**
+1. **`app.py`** - Flask web interface (RECOMMENDED for Raspberry Pi)
+2. **`pose_angle_detector_cli.py`** - Command-line version (terminal-based)
+3. **`pose_angle_detector.py`** - Desktop GUI version (requires tkinter & display)
+4. **`pose_angle_detector_arduino.py`** - GUI + Arduino integration
 
 ---
 
@@ -24,15 +25,6 @@ This module provides pose detection and movement control using MediaPipe pose la
 - 180° = Fully bent/Maximum rotation
 - Real-time angle smoothing (5-frame moving average)
 
-### Arduino Integration (arduino version)
-- PWM signal generation (0-255)
-- Angle-to-PWM conversion: `PWM = (Angle / 180) × 255`
-- Auto-detection of Arduino Mega on COM3-COM10
-- Support for 3 servo/actuator channels:
-  - **Pin 3**: Left Bicep PWM
-  - **Pin 5**: Right Bicep PWM
-  - **Pin 6**: Head Movement PWM
-
 ---
 
 ## Installation
@@ -44,17 +36,55 @@ pip install -r requirements.txt
 
 ### Dependencies
 - **mediapipe**: Pose detection (33 landmarks)
-- **opencv-python**: Camera input and visualization
+- **opencv-python**: Camera input and video processing
 - **numpy**: Angle calculations
+- **Flask**: Web interface (for web version)
 - **Pillow**: Image processing (optional)
 - **PyMata4**: Arduino communication (optional)
-- **pyserial**: Serial communication (optional)
 
 ---
 
 ## Usage - Quick Start
 
-### 🎯 RECOMMENDED: CLI Version (No GUI needed)
+### 🌟 RECOMMENDED: Flask Web Interface
+
+```bash
+python app.py
+```
+
+**Features:**
+- ✅ Accessible via web browser (http://navis.local:5052)
+- ✅ Works on Raspberry Pi headless mode
+- ✅ No tkinter or display required
+- ✅ Real-time video streaming
+- ✅ Beautiful responsive web UI
+- ✅ Can access from any computer on network
+- ✅ Perfect for remote operation
+
+**How to Use:**
+1. Start the server:
+   ```bash
+   cd /home/navis/NAVIS/Movement
+   python app.py
+   ```
+
+2. Open in web browser:
+   ```
+   http://navis.local:5052
+   or
+   http://192.168.0.199:5052
+   ```
+
+3. Click buttons to select movement:
+   - **LEFT BICEP** - Track left arm bend angle
+   - **RIGHT BICEP** - Track right arm bend angle
+   - **HEAD** - Track head movement angle
+
+4. Watch real-time angle display and video stream
+
+---
+
+### CLI Version (Terminal-based)
 
 ```bash
 python pose_angle_detector_cli.py
@@ -66,26 +96,29 @@ python pose_angle_detector_cli.py
 - **3** = Select HEAD MOVEMENT
 - **q** = Quit
 
+**Advantages:**
+- ✅ Works on SSH (no display needed)
+- ✅ Lowest latency
+- ✅ Smallest memory footprint
+- ✅ Real-time terminal output
+- ✅ Perfect for headless Raspberry Pi
+
 **Output:**
 ```
 [Frame 30] LEFT BICEP: 45.3° | Left: 45.3° | Right: 78.2° | Head: 92.1°
 [Frame 60] LEFT BICEP: 52.1° | Left: 52.1° | Right: 81.5° | Head: 90.8°
 ```
 
-✅ Works on all systems (including Raspberry Pi without display)
-✅ Real-time angle detection
-✅ No tkinter dependency
-
 ---
 
-### GUI Version (requires tkinter)
+### Desktop GUI Version (requires tkinter)
 
 ```bash
 python pose_angle_detector.py
 ```
 
 **GUI Features:**
-- Movement selection buttons (Left Bicep, Right Bicep, Head)
+- Movement selection buttons
 - Real-time angle display (0-180°)
 - Angle progress bar
 - Status display for all three joints
@@ -99,7 +132,7 @@ sudo apt-get install python3-tk
 
 ---
 
-### Arduino Integration (requires tkinter + Arduino)
+### Arduino Integration (requires tkinter + Arduino Mega)
 
 ```bash
 python pose_angle_detector_arduino.py
@@ -109,13 +142,6 @@ python pose_angle_detector_arduino.py
 - Arduino Mega board connected via USB
 - StandardFirmata loaded on Arduino
 - Servo motors or PWM actuators wired to pins 3, 5, 6
-
-**Connection Steps:**
-1. Connect Arduino Mega via USB
-2. Run: `python pose_angle_detector_arduino.py`
-3. Click **"Connect to Arduino Mega"** button
-4. Select movement (Left/Right Bicep or Head)
-5. Perform movement → Servo moves in real-time
 
 **Arduino Wiring:**
 ```
@@ -144,8 +170,9 @@ Arduino 5V         → Servo VCC
 - Point 3: Right Wrist (landmark 16)
 
 **Head Movement Calculation:**
-- Uses eye landmarks (33, 263) for tilt detection
-- Vertical distance between eyes mapped to 0-180°
+- Uses eye landmarks from face_landmarks (indices 33, 263)
+- Fallback: Uses nose-to-shoulder angle if face not detected
+- Vertical eye distance mapped to 0-180°
 
 ### Smoothing Algorithm
 
@@ -163,25 +190,49 @@ min_detection_confidence = 0.7
 min_tracking_confidence = 0.7
 ```
 
-### Angle to PWM Conversion (Arduino)
+---
+
+## File Structure
 
 ```
-Angle (°)  → PWM (0-255)
-0°         → 0
-90°        → 127
-180°       → 255
+Movement/
+├── app.py                              # Flask web interface ⭐ RECOMMENDED
+├── templates/
+│   └── index_movement.html             # Web UI template
+├── pose_angle_detector_cli.py          # CLI version
+├── pose_angle_detector.py              # Desktop GUI version
+├── pose_angle_detector_arduino.py      # GUI + Arduino version
+├── requirements.txt                     # Dependencies
+└── README.md                            # This file
 ```
+
+---
+
+## Performance Comparison
+
+| Feature | Web | CLI | GUI | Arduino |
+|---------|-----|-----|-----|---------|
+| Display needed | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
+| Tkinter needed | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
+| Browser access | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Remote access | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Arduino support | ❌ No | ❌ No | ❌ No | ✅ Yes |
+| Latency | Low | Very low | Low | Medium |
+| Ease of use | Easy | Easy | Medium | Medium |
+| Network ports | 5052 | None | None | None |
+| Best for | Remote Raspberry Pi | SSH/Terminal | Development | Hardware control |
 
 ---
 
 ## Troubleshooting
 
-### "No module named '_tkinter'" Error
-**Problem**: tkinter not installed for your Python version
+### "No display" error with CLI version
+The CLI version doesn't show a display window - it runs completely headless. This is normal and expected.
 
-**Solution**: Use the CLI version (recommended)
+### "Could not connect to display" error with Qt
+This error occurs when trying to run GUI version without a display. Use `app.py` instead:
 ```bash
-python pose_angle_detector_cli.py
+python app.py
 ```
 
 ### Person Not Detected
@@ -190,54 +241,70 @@ python pose_angle_detector_cli.py
 - Keep camera at arm's length distance
 - Check MediaPipe: `pip install mediapipe`
 
+### Web interface not accessible
+- Verify Flask is running: Look for "Running on http://0.0.0.0:5052"
+- Check firewall: Port 5052 should be open
+- Try direct IP: http://192.168.0.199:5052 (replace with your Pi's IP)
+- Verify on same network: Computer and Pi must be on same network
+
 ### Arduino Not Connecting
 - Check USB cable connection
 - Verify Arduino in Device Manager or `/dev/ttyUSB*`
 - Upload StandardFirmata to Arduino
-- Try "Connect to Arduino Mega" button again
+- Try "Connect to Arduino" button again
 
 ### Inaccurate Angles
 - Improve lighting conditions
 - Reduce background clutter
 - Move closer to camera
+- Ensure full body visibility
 
 ---
 
-## Performance
+## Performance Specs
 
 ### Hardware Requirements
 - **Processor**: Raspberry Pi 4B+ recommended
 - **RAM**: 2GB minimum
 - **Camera**: USB webcam (640×480 @ 30fps)
+- **Network**: Ethernet or WiFi for web interface
 
 ### Expected Performance
 - **FPS**: 25-30 FPS
-- **Latency**: 100-150ms with Arduino
+- **Latency**: 100-150ms (web), <50ms (CLI)
 - **CPU Usage**: 40-50%
+- **Memory Usage**: 150-200MB
 
 ---
 
-## File Structure
+## FAQ
 
-```
-Movement/
-├── pose_angle_detector_cli.py          # CLI version (RECOMMENDED)
-├── pose_angle_detector.py              # GUI version
-├── pose_angle_detector_arduino.py      # GUI + Arduino
-├── requirements.txt                     # Dependencies
-└── README.md                            # This file
-```
+**Q: What's the best version for Raspberry Pi?**
+A: Use `app.py` (Flask web interface). It requires no display, works remotely, and has a nice UI.
+
+**Q: Can I access from my phone?**
+A: Yes! With `app.py`, just open http://navis.local:5052 on your phone's browser.
+
+**Q: Does it work over SSH?**
+A: CLI version works perfectly over SSH. Web version works via browser on any device.
+
+**Q: What's the difference between GUI and web versions?**
+A: GUI runs on the Raspberry Pi with a display. Web version is a server you access via browser - more flexible.
+
+**Q: Can I use this with motors/servos?**
+A: Yes! Use the Arduino version to control PWM servos (0-255 based on angle).
 
 ---
 
 ## Future Enhancements
 
-- [ ] Full body angle detection (elbow, knee, hip)
-- [ ] Multiple servo control (sequential movement)
-- [ ] Gesture recognition (thumbs up, wave, etc.)
+- [ ] Full body angle detection (elbow, knee, hip, ankle)
+- [ ] Multiple servo/motor control with sequences
+- [ ] Gesture recognition (thumbs up, wave, point, etc.)
 - [ ] Recording and playback of movements
-- [ ] Web interface for remote control
-- [ ] Mobile app integration
+- [ ] Mobile app for iOS/Android
+- [ ] Bluetooth servo control
+- [ ] Machine learning-based movement classification
 
 ---
 
@@ -249,4 +316,4 @@ Part of NAVIS Robot Project
 
 ## Support
 
-For issues or questions, refer to the main NAVIS README.md
+For issues or questions, refer to the main NAVIS README.md or create an issue on GitHub.
