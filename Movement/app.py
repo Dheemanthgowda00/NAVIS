@@ -54,7 +54,16 @@ angle_history_right = deque(maxlen=SMOOTHING_FRAMES)
 angle_history_head = deque(maxlen=SMOOTHING_FRAMES)
 
 def calculate_angle(point1, point2, point3):
-    """Calculate angle between three points"""
+    """
+    Calculate bicep curl angle at elbow
+    point1: shoulder
+    point2: elbow (pivot point)
+    point3: wrist
+    
+    Mapping:
+    - 0 degrees = straight arms down (fully extended)
+    - 180 degrees = bent arms (L-shape, like bicep curl)
+    """
     a = np.array([point1.x - point2.x, point1.y - point2.y])
     b = np.array([point3.x - point2.x, point3.y - point2.y])
     
@@ -62,6 +71,10 @@ def calculate_angle(point1, point2, point3):
     cos_angle = np.clip(cos_angle, -1, 1)
     angle = np.arccos(cos_angle)
     angle_deg = np.degrees(angle)
+    
+    # Invert: straight (180 degrees) becomes 0, bent (0) becomes 180
+    angle_deg = 180 - angle_deg
+    angle_deg = np.clip(angle_deg, 0, 180)
     
     return angle_deg
 

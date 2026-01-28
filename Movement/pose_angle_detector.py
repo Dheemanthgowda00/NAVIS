@@ -215,11 +215,14 @@ of the camera for accurate detection.
         
     def calculate_angle(self, point1, point2, point3):
         """
-        Calculate angle between three points
-        point1: first point (e.g., shoulder)
-        point2: middle point (e.g., elbow)
-        point3: end point (e.g., wrist)
-        Returns: angle in degrees (0-180)
+        Calculate bicep curl angle at elbow
+        point1: shoulder
+        point2: elbow (pivot point)
+        point3: wrist
+        
+        Mapping:
+        - 0 degrees = straight arms down (fully extended)
+        - 180 degrees = bent arms (L-shape, like bicep curl)
         """
         # Vectors
         a = np.array([point1.x - point2.x, point1.y - point2.y])
@@ -230,6 +233,10 @@ of the camera for accurate detection.
         cos_angle = np.clip(cos_angle, -1, 1)
         angle = np.arccos(cos_angle)
         angle_deg = np.degrees(angle)
+        
+        # Invert: straight (180 degrees) becomes 0, bent (0) becomes 180
+        angle_deg = 180 - angle_deg
+        angle_deg = np.clip(angle_deg, 0, 180)
         
         return angle_deg
     
